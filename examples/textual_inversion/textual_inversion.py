@@ -302,7 +302,7 @@ imagenet_style_templates_small = [
 # Alternative ImageNet templates for learning object.
 # Based on select templates found at: https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb
 imagenet_templates_select = [
-    "itap of a {}",
+    "itap of a {}",  # `itap` stands for "I Took a Picture"
     "a bad photo of the {}",
     "a origami {}",
     "a photo of the large{}",
