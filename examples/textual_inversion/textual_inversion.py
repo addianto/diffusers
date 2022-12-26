@@ -4,7 +4,7 @@ import math
 import os
 import random
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -111,7 +111,7 @@ def parse_args():
     parser.add_argument(
         "--initializer_token", type=str, default=None, required=True, help="A token to use as initializer word."
     )
-    parser.add_argument("--learnable_property", type=str, default="object", help="Choose between 'object', 'style', and 'select'")
+    parser.add_argument("--learnable_property", type=str, default="object", help="Choose between 'object', 'style', 'select', and 'kinetic'")
     parser.add_argument("--repeats", type=int, default=100, help="How many times to repeat the training data.")
     parser.add_argument(
         "--output_dir",
@@ -301,7 +301,7 @@ imagenet_style_templates_small = [
 
 # Alternative ImageNet templates for learning object.
 # Based on select templates found at: https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb
-imagenet_templates_select = [
+imagenet_templates_select: List[str] = [
     "itap of a {}",  # `itap` stands for "I Took a Picture"
     "a bad photo of the {}",
     "a origami {}",
@@ -311,12 +311,45 @@ imagenet_templates_select = [
     "a photo of the small {}",
 ]
 
+# Alternative ImageNet templates for learning action.
+# Based on Kinetics700 template found at: https://github.com/openai/CLIP/blob/main/data/prompts.md#kinetics700
+imagenet_templates_kinetic: List[str] = [
+    "a photo of {}",
+    "a photo of a person {}",
+    "a photo of a person using {}",
+    "a photo of a person doing {}",
+    "a photo of a person during {}",
+    "a photo of a person performing {}",
+    "a photo of a person practicing {}",
+    "a video of {}",
+    "a video of a person {}",
+    "a video of a person using {}",
+    "a video of a person doing {}",
+    "a video of a person during {}",
+    "a video of a person performing {}",
+    "a video of a person practicing {}",
+    "a example of {}",
+    "a example of a person {}",
+    "a example of a person using {}",
+    "a example of a person doing {}",
+    "a example of a person during {}",
+    "a example of a person performing {}",
+    "a example of a person practicing {}",
+    "a demonstration of {}",
+    "a demonstration of a person {}",
+    "a demonstration of a person using {}",
+    "a demonstration of a person doing {}",
+    "a demonstration of a person during {}",
+    "a demonstration of a person performing {}",
+    "a demonstration of a person practicing {}",
+]
+
 class TextualInversionDataset(Dataset):
     def __init__(
         self,
         data_root,
         tokenizer,
-        learnable_property="object",  # [object, style, select]
+        learnable_property="object",  # [object, style, select, kinetic]
         size=512,
         repeats=100,
         interpolation="bicubic",
@@ -351,13 +384,15 @@ class TextualInversionDataset(Dataset):
         self.templates = self.__choose_template(learnable_property)
         self.flip_transform = transforms.RandomHorizontalFlip(p=self.flip_p)
 
-    def __choose_template(self, property: str) -> str:
+    def __choose_template(self, property: str) -> List[str]:
         if property == "object":
             return imagenet_templates_small
+        elif property == "style":
+            return imagenet_style_templates_small
         elif property == "select":
             return imagenet_templates_select
         else:
-            return imagenet_style_templates_small
+            return imagenet_templates_kinetic
 
     def __len__(self):
         return self._length
