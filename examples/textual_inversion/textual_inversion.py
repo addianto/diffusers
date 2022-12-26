@@ -111,7 +111,7 @@ def parse_args():
     parser.add_argument(
         "--initializer_token", type=str, default=None, required=True, help="A token to use as initializer word."
     )
-    parser.add_argument("--learnable_property", type=str, default="object", help="Choose between 'object' and 'style'")
+    parser.add_argument("--learnable_property", type=str, default="object", help="Choose between 'object', 'style', and 'select'")
     parser.add_argument("--repeats", type=int, default=100, help="How many times to repeat the training data.")
     parser.add_argument(
         "--output_dir",
@@ -299,13 +299,24 @@ imagenet_style_templates_small = [
     "a large painting in the style of {}",
 ]
 
+# Alternative ImageNet templates for learning object.
+# Based on select templates found at: https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb
+imagenet_templates_select = [
+    "itap of a {}",
+    "a bad photo of the {}",
+    "a origami {}",
+    "a photo of the large{}",
+    "a {} in a video game",
+    "art of the {}",
+    "a photo of the small {}",
+]
 
 class TextualInversionDataset(Dataset):
     def __init__(
         self,
         data_root,
         tokenizer,
-        learnable_property="object",  # [object, style]
+        learnable_property="object",  # [object, style, select]
         size=512,
         repeats=100,
         interpolation="bicubic",
@@ -337,8 +348,16 @@ class TextualInversionDataset(Dataset):
             "lanczos": PIL_INTERPOLATION["lanczos"],
         }[interpolation]
 
-        self.templates = imagenet_style_templates_small if learnable_property == "style" else imagenet_templates_small
+        self.templates = self.__choose_template(learnable_property)
         self.flip_transform = transforms.RandomHorizontalFlip(p=self.flip_p)
+
+    def __choose_template(self, property: str) -> str:
+        if property == "object":
+            return imagenet_templates_small
+        elif property == "select":
+            return imagenet_templates_select
+        else:
+            return imagenet_style_templates_small
 
     def __len__(self):
         return self._length
