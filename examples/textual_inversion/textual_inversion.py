@@ -305,7 +305,7 @@ imagenet_templates_select: List[str] = [
     "itap of a {}",  # `itap` stands for "I Took a Picture"
     "a bad photo of the {}",
     "a origami {}",
-    "a photo of the large{}",
+    "a photo of the large {}",
     "a {} in a video game",
     "art of the {}",
     "a photo of the small {}",
