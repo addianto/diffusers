@@ -223,6 +223,12 @@ def parse_args():
             ' `--checkpointing_steps`, or `"latest"` to automatically select the last available checkpoint.'
         ),
     )
+    parser.add_argument(
+        "--enable_safety_checker",
+        action="store_true",
+        default=True,
+        help="Whether the safety checker should be included when exporting the full model.",
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -684,7 +690,7 @@ def main():
                 unet=unet,
                 tokenizer=tokenizer,
                 scheduler=PNDMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler"),
-                safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker"),
+                safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker") if args.enable_safety_checker else None,
                 feature_extractor=CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32"),
             )
             pipeline.save_pretrained(args.output_dir)
