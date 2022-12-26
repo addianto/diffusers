@@ -229,6 +229,12 @@ def parse_args():
         default=True,
         help="Whether the safety checker should be included when exporting the full model.",
     )
+    parser.add_argument(
+        "--embed_filename",
+        type=str,
+        default="learned_embeds",
+        help="The name of the embedding file. Will default to `learned_embeds`.",
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -658,7 +664,7 @@ def main():
                 progress_bar.update(1)
                 global_step += 1
                 if global_step % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir, f"learned_embeds-steps-{global_step}.bin")
+                    save_path = os.path.join(args.output_dir, f"{args.embed_filename}-steps-{global_step}.bin")
                     save_progress(text_encoder, placeholder_token_id, accelerator, args, save_path)
 
                 if global_step % args.checkpointing_steps == 0:
@@ -695,7 +701,7 @@ def main():
             )
             pipeline.save_pretrained(args.output_dir)
         # Save the newly trained embeddings
-        save_path = os.path.join(args.output_dir, "learned_embeds.bin")
+        save_path = os.path.join(args.output_dir, f"{args.embed_filename}.bin")
         save_progress(text_encoder, placeholder_token_id, accelerator, args, save_path)
 
         if args.push_to_hub:
